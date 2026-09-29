@@ -13,6 +13,15 @@ type Account struct {
 	Balance int
 }
 
+type InsufficientFundsError struct {
+	Requested int
+	Balance   int
+}
+
+func (e *InsufficientFundsError) Error() string {
+	return fmt.Sprintf("Insufficient funds: Requested %d, Balance %d", e.Requested, e.Balance)
+}
+
 func (a *Account) Deposit(amount int) error {
 	if amount <= 0 {
 		return ErrInvalidAmount
@@ -27,7 +36,10 @@ func (a *Account) Withdraw(amount int) error {
 		return ErrInvalidAmount
 	}
 	if amount > a.Balance {
-		return fmt.Errorf("withdraw %d from balance %d: %v", amount, a.Balance, ErrInsufficientFunds)
+		return &InsufficientFundsError{
+			Requested: amount,
+			Balance:   a.Balance,
+		}
 	}
 	a.Balance -= amount
 	return nil
@@ -40,13 +52,10 @@ func main() {
 		fmt.Println(err)
 	}
 	err = myFirstAccount.Withdraw(500)
-	if errors.Is(err, ErrInsufficientFunds) {
-		fmt.Printf("[insufficient funds branch] %v\n", err)
+	var insufficient *InsufficientFundsError
+	if errors.As(err, &insufficient) {
+		fmt.Printf("Your account is short %d\n", insufficient.Requested-insufficient.Balance)
 	} else if err != nil {
-		fmt.Println(err)
-	}
-	err = myFirstAccount.Withdraw(30)
-	if err != nil {
 		fmt.Println(err)
 	}
 	fmt.Println(myFirstAccount.Balance)

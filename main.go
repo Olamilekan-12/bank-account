@@ -27,7 +27,7 @@ func (a *Account) Withdraw(amount int) error {
 		return ErrInvalidAmount
 	}
 	if amount > a.Balance {
-		return ErrInsufficientFunds
+		return fmt.Errorf("withdraw %d from balance %d: %v", amount, a.Balance, ErrInsufficientFunds)
 	}
 	a.Balance -= amount
 	return nil
@@ -39,23 +39,12 @@ func main() {
 	if err != nil {
 		fmt.Println(err)
 	}
-	err = myFirstAccount.Deposit(-50)
-	if err != nil {
-		fmt.Println(err)
-	}
 	err = myFirstAccount.Withdraw(500)
 	if errors.Is(err, ErrInsufficientFunds) {
-		fmt.Printf("Not enough money. Current balance: %d\n", myFirstAccount.Balance)
+		fmt.Printf("[insufficient funds branch] %v\n", err)
 	} else if err != nil {
 		fmt.Println(err)
 	}
-	err = myFirstAccount.Withdraw(-10)
-	if errors.Is(err, ErrInsufficientFunds) {
-		fmt.Printf("Not enough money. Current balance: %d\n", myFirstAccount.Balance)
-	} else if err != nil {
-		fmt.Println(err)
-	}
-
 	err = myFirstAccount.Withdraw(30)
 	if err != nil {
 		fmt.Println(err)
